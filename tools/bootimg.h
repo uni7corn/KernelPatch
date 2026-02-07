@@ -1,6 +1,11 @@
 
 #define ALIGN(x, a) (((x) + (a) - 1) & ~((a) - 1))
 #define PAGE_SIZE_DEFAULT 4096
+
+#define LZ4_MAGIC 0x184c2102
+#define LZ4_BLOCK_SIZE 0x800000
+#define LZ4HC_CLEVEL 12
+
 struct boot_img_hdr {
     uint8_t magic[8];           // "ANDROID!"
     uint32_t kernel_size;
@@ -16,11 +21,11 @@ struct boot_img_hdr {
     uint8_t cmdline[512];
     uint32_t id[8];
 	uint8_t extra_cmdline[1024];     // command
-    
+
     // v2 
     uint32_t recovery_dtbo_size;     
     uint64_t recovery_dtbo_offset;   
-    uint32_t header_size;            
+         
     
     // v3 
     uint32_t dtb_size;               
@@ -58,6 +63,17 @@ struct fdt_header {
     uint32_t size_dt_strings;
     uint32_t size_dt_struct;
 };
+struct avb_footer {
+    /* 0x00 */ uint32_t magic;              /* ("AVBf") */
+    /* 0x04 */ uint32_t version;            /*  0x00000001 */
+    /* 0x08 */ uint64_t reserved1;          /*  0x0000000000000000 */
+    /* 0x10 */ uint32_t data_size1;         /*  0x00022FC000000000 */
+    /* 0x10 */ uint32_t data_size_1;         /*  0x00022FC000000000 */
+    /* 0x16 */ uint32_t data_size2;         /* same as data_size1 */
+    /* 0x16 */ uint32_t data_size_2;         /* same as data_size1 */
+    /* 0x20 */ uint64_t unknown_field;      /* 0x0000000000000940 */
+    /* 0x30 */ uint8_t  padding[24];        /*  */
+} __attribute__((packed));
 
 int repack_bootimg(const char *orig_boot_path, 
                         const char *new_kernel_path, 
@@ -65,3 +81,4 @@ int repack_bootimg(const char *orig_boot_path,
 int extract_kernel(const char *bootimg_path);
 
 int detect_compress_method(compress_head data);
+int cacluate_sha1(const char *file);
